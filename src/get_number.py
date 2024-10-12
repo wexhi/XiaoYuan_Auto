@@ -18,32 +18,23 @@ def get_number():
         region=(window.left, window.top, window.width, window.height)
     )
 
+    # Calculate scaling factors
+    scale_x = window.width / config.WINDOW_DEFAULT_WIDTH
+    scale_y = window.height / config.WINDOW_DEFAULT_HEIGHT
+
     def find_question(window_screenshot):
         img = cv2.cvtColor(np.array(window_screenshot), cv2.COLOR_RGB2BGR)
-        # Coordinates for left and right number regions
-        left_number_x1, left_number_x2, left_number_y1, left_number_y2 = (
-            config.LEFT_NUMBER_X1,
-            config.LEFT_NUMBER_X2,
-            config.LEFT_NUMBER_Y1,
-            config.LEFT_NUMBER_Y2,
-        )
-        # print(left_number_x1, left_number_y1)
-        right_number_x1, right_number_x2, right_number_y1, right_number_y2 = (
-            config.RIGHT_NUMBER_X1,
-            config.RIGHT_NUMBER_X2,
-            config.RIGHT_NUMBER_Y1,
-            config.RIGHT_NUMBER_Y2,
-        )
-        roi = img[230:430, :]
-        # Extract left and right numbers
-        left_number = roi[
-            :,
-            left_number_x1:left_number_x2,
-        ]
-        right_number = roi[
-            :,
-            right_number_x1:right_number_x2,
-        ]
+        # Scale coordinates dynamically based on the current window size
+        left_number_x1 = int(config.LEFT_NUMBER_X1 * scale_x)
+        left_number_x2 = int(config.LEFT_NUMBER_X2 * scale_x)
+        left_number_y1 = int(config.LEFT_NUMBER_Y1 * scale_y)
+        left_number_y2 = int(config.LEFT_NUMBER_Y2 * scale_y)
+
+        right_number_x1 = int(config.RIGHT_NUMBER_X1 * scale_x)
+        right_number_x2 = int(config.RIGHT_NUMBER_X2 * scale_x)
+        right_number_y1 = int(config.RIGHT_NUMBER_Y1 * scale_y)
+        right_number_y2 = int(config.RIGHT_NUMBER_Y2 * scale_y)
+        # 在 img 中画出左边数字的候选框
         cv2.rectangle(
             img,
             (left_number_x1, left_number_y1),
@@ -51,6 +42,8 @@ def get_number():
             (0, 255, 0),
             2,
         )
+
+        # 在 img 中画出右边数字的候选框
         cv2.rectangle(
             img,
             (right_number_x1, right_number_y1),
@@ -58,7 +51,16 @@ def get_number():
             (0, 255, 0),
             2,
         )
-        return left_number, right_number, roi
+
+        # 显示带有候选框的原始图像（img）
+        cv2.imshow("Bounding Boxes in Original Image", img)
+
+        # 提取左边和右边的数字区域
+        left_number = img[left_number_y1:left_number_y2, left_number_x1:left_number_x2]
+        right_number = img[
+            right_number_y1:right_number_y2, right_number_x1:right_number_x2
+        ]
+        return left_number, right_number, img
 
     left_number, right_number = np.zeros(
         (

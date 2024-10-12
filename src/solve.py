@@ -4,6 +4,7 @@ import pytesseract
 from PIL import Image
 import pyautogui
 import time
+import config
 
 
 class Solve:
@@ -35,31 +36,6 @@ class Solve:
         # 二值化处理
         _, left_number_img = cv2.threshold(left_gray, 127, 255, cv2.THRESH_BINARY)
         _, right_number_img = cv2.threshold(right_gray, 127, 255, cv2.THRESH_BINARY)
-
-        # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
-        # left_number_img = cv2.dilate(left_number_img, kernel)
-        # right_number_img = cv2.dilate(right_number_img, kernel)
-
-        # left_number_img = cv2.resize(
-        #     left_number_img, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC
-        # )
-        # right_number_img = cv2.resize(
-        #     right_number_img, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC
-        # )
-
-        # # 膨胀操作
-        # kernel = np.ones((3, 3), np.uint8)
-        # left_number_img = cv2.dilate(left_binary, kernel)
-        # right_number_img = cv2.dilate(right_binary, kernel)
-
-        # cv2.imshow("left_number_img", left_number_img)
-        # cv2.imshow("right_number_img", right_number_img)
-
-        # create window
-        cv2.namedWindow("left_number_img", cv2.WINDOW_NORMAL)
-        cv2.namedWindow("right_number_img", cv2.WINDOW_NORMAL)
-        cv2.imshow("left_number_img", left_number_img)
-        cv2.imshow("right_number_img", right_number_img)
 
         # 将图像数据转换为 PIL 格式
         left_number_img_pil = Image.fromarray(left_number_img)
@@ -100,42 +76,63 @@ class Solve:
         operation = calculate(left_num, right_num)
         # print(f"operation: {operation}")
 
-        def draw_great_than(win_x, win_y):
-            pyautogui.moveTo(win_x + 200, win_y + 450)
-            pyautogui.dragTo(win_x + 500, win_y + 450)
-            pyautogui.moveTo(win_x + 500, win_y + 450)
-            pyautogui.dragTo(win_x + 200, win_y + 650)
+        def draw_great_than(win_x, win_y, scale_x, scale_y):
+            pyautogui.moveTo(win_x + int(200 * scale_x), win_y + int(450 * scale_y))
+            pyautogui.dragTo(win_x + int(500 * scale_x), win_y + int(450 * scale_y))
+            pyautogui.moveTo(win_x + int(500 * scale_x), win_y + int(450 * scale_y))
+            pyautogui.dragTo(win_x + int(200 * scale_x), win_y + int(650 * scale_y))
 
-        def draw_less_than(win_x, win_y):
-            pyautogui.moveTo(win_x + 500, win_y + 450)
-            pyautogui.dragTo(win_x + 200, win_y + 450)
-            pyautogui.moveTo(win_x + 200, win_y + 450)
-            pyautogui.dragTo(win_x + 500, win_y + 650)
+        def draw_less_than(win_x, win_y, scale_x, scale_y):
+            pyautogui.moveTo(win_x + int(500 * scale_x), win_y + int(450 * scale_y))
+            pyautogui.dragTo(win_x + int(200 * scale_x), win_y + int(450 * scale_y))
+            pyautogui.moveTo(win_x + int(200 * scale_x), win_y + int(450 * scale_y))
+            pyautogui.dragTo(win_x + int(500 * scale_x), win_y + int(650 * scale_y))
 
-        def draw_equal(win_x, win_y):
-            pyautogui.moveTo(win_x + 200, win_y + 650)
-            pyautogui.dragTo(win_x + 500, win_y + 650)
-            pyautogui.moveTo(win_x + 200, win_y + 700)
-            pyautogui.dragTo(win_x + 500, win_y + 700)
+        def draw_equal(win_x, win_y, scale_x, scale_y):
+            pyautogui.moveTo(win_x + int(200 * scale_x), win_y + int(650 * scale_y))
+            pyautogui.dragTo(win_x + int(500 * scale_x), win_y + int(650 * scale_y))
+            pyautogui.moveTo(win_x + int(200 * scale_x), win_y + int(700 * scale_y))
+            pyautogui.dragTo(win_x + int(500 * scale_x), win_y + int(700 * scale_y))
 
         def draw_flag(operation):
             win_box = [window.left, window.top, window.width, window.height]
             win_x, win_y, win_w, win_h = win_box
+
+            # 计算缩放比例
+            scale_x = win_w / config.WINDOW_DEFAULT_WIDTH
+            scale_y = win_h / config.WINDOW_DEFAULT_HEIGHT
+
+            # 根据缩放比例调整鼠标点击的坐标
             if operation == "<":
-                draw_less_than(win_x, win_y)
+                draw_less_than(win_x, win_y, scale_x, scale_y)
             elif operation == ">":
-                draw_great_than(win_x, win_y)
+                draw_great_than(win_x, win_y, scale_x, scale_y)
             elif operation == "=":
-                draw_equal(win_x, win_y)
-            else:
-                pass
+                draw_equal(win_x, win_y, scale_x, scale_y)
 
         def auto_continue():
             win_box = [window.left, window.top, window.width, window.height]
             win_x, win_y, win_w, win_h = win_box
-            pyautogui.click(win_x + 350, win_y + 680, duration=0.5)
-            pyautogui.click(win_x + 600, win_y + 1300, duration=0.5)
-            pyautogui.click(win_x + 400, win_y + 1170, duration=0.5)
+
+            # 计算缩放比例
+            scale_x = win_w / config.WINDOW_DEFAULT_WIDTH
+            scale_y = win_h / config.WINDOW_DEFAULT_HEIGHT
+
+            # 调整点击位置
+            pyautogui.click(
+                win_x + int(350 * scale_x), win_y + int(680 * scale_y), duration=0.5
+            )
+            pyautogui.click(
+                win_x + int(600 * scale_x), win_y + int(1300 * scale_y), duration=0.5
+            )
+            pyautogui.click(
+                win_x + int(400 * scale_x), win_y + int(1170 * scale_y), duration=0.5
+            )
+
+        if left_num == 0 and right_num == 0:
+            print(
+                "没有找到数字，如果游戏进行中，请调整窗口位置，确保为竖屏，且窗口越大越好，需要确保数字在绿色框中"
+            )
 
         if left_num != self.left_num_last or right_num != self.right_num_last:
             self.error_count = 0
@@ -162,6 +159,7 @@ class Solve:
         ):  # 当没识别到数字时，自动点击继续
             time.sleep(5)
             auto_continue()
+            print("没有找到数字，可能游戏已结束，自动点击继续")
             self.isContinue = False
 
         self.left_num_last = left_num
